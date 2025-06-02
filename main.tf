@@ -31,3 +31,32 @@ resource "azurerm_app_service_plan" "appserplan01"{
   }
 
 }
+
+resource "azurerm_app_service" "appsrv01"{
+  name = "hdfc-corp-appln"
+  resource_group_name = var.resource_group_name
+  location = var.resource_group_location
+  app_service_plan_id =  azurerm_app_service_plan.appserplan01.id
+}
+
+resource "azurerm_storage_account" "stoacct010"{
+  name = "hdfcstorageacct"
+  resource_group_name = var.resource_group_name
+  location = var.resource_group_location
+  account_tier = "Standard"
+  account_replication_type = "ZRS"
+}
+
+resource "azurerm_private_endpoint" "pvtendpt01" {
+  name = "hdfc-appln-srvc-pvt-endpoint"
+  resource_group_name = var.resource_group_name
+  location = var.resource_group_location
+  subnet_id = azurerm_subnet.subnet01.id
+
+  private_service_connection {
+    name = "hdfc-pvt-service-conn"
+    private_connection_resource_id = azurerm_storage_account.stoacct010.id
+    is_manual_connection = false
+    subresource_names = [ "blob" ]
+  }
+}
